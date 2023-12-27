@@ -1,0 +1,52 @@
+name: CI/CD Pipeline
+# ▽ dev 라는 이름의 브랜치에 push 발생 시 해당 스크립트 실행.
+on:
+  # ▽ 수동으로 동작시킬 수 있도록 이벤트 트리거 추가
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+      
+ # ▽ 프로젝트의 JDK 버전 명시
+    - name: Set up JDK 17
+      uses: actions/setup-java@v2
+      with:
+        java-version: '17'
+        distribution: 'adopt'      
+# ▽ GitHub Actions에서 gradlew 스크립트를 실행시키기 위해, 실행 권한을 부여 함.
+    - name: Set up Executable Permission for Gradlew
+      run: chmod +x ./gradlew
+# ▽ 애플리케이션 빌드
+    -  name: Build and Test
+       run: ./gradlew build
+# ▽ 도커 허브 로그인 (깃허브의 secrets 내 변수로 username, password 치환)
+    - name: Login to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_PW }}
+# ▽ 도커 이미지 빌드 및 푸시        
+    - name: Build and Push Docker Image
+      run: |
+        docker build -t joelgyunampark/pomotime:${{ github.sha }} .
+        docker push joelgyunampark/pomotime:${{ github.sha }}
+# ▽ EC2 접속
+    - name: Deploy to AWS EC2
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+# ▽ EC2에서 docker 이미지 pull, 기존 컨테이너 중지 삭제 및 새 이미지 run
+        script: |
+          docker pull joelgyunampark/pomotime:${{ github.sha }}
+          docker stop pokopoko || true
+          docker rm pokopoko || true
+          docker run -d --name pomotime -p 80:8080 joelgyunampark/pomotime:${{ github.sha }}
