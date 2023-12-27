@@ -47,6 +47,6 @@ jobs:
 # ▽ EC2에서 docker 이미지 pull, 기존 컨테이너 중지 삭제 및 새 이미지 run
         script: |
           docker pull joelgyunampark/pomotime:${{ github.sha }}
-          docker stop pokopoko || true
-          docker rm pokopoko || true
+          docker stop pomotime || true
+          docker rm pomotime || true
           docker run -d --name pomotime -p 80:8080 joelgyunampark/pomotime:${{ github.sha }}
