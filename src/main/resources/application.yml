@@ -1,0 +1,22 @@
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant-path-matcher
+      
+  jpa:
+    show-sql: true
+    hibernate:
+      naming:
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl      
+      ddl-auto: create
+    properties:
+      hibername:
+        format_sql: true
+    defer-datasource-initialization: true
+    
+  datasource:
+    url: jdbc:mysql://pokopoko.caqxtjyl20r1.ap-northeast-2.rds.amazonaws.com/pokopokoDev?createDatabaseIfNotExist=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: admin
+    password: pokopoko
